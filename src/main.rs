@@ -69,6 +69,7 @@ async fn main() -> Result<()> {
 
     println!("Unpacking layers to {}", args.output.display());
 
-    render::unpack(&blobs, &args.output)?;
+    let canonical_path = args.output.canonicalize().unwrap();
+    render::unpack(&blobs, &canonical_path)?;
     Ok(())
 }

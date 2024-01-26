@@ -8,7 +8,7 @@ anyhow = "1"
 clap = { version = "4.4.18", features = ["derive", "string"] }
 dkregistry = { version = "0.5.1-alpha.0", git = "https://github.com/camallo/dkregistry-rs.git", rev = "6c4ac7700f8870e58aaa5a906a28e65cdf254d58" }
 futures = "0.3"
-libflate = "<1.3.0"
+libflate = "2"
 tar = "0.4"
 thiserror = "1"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }

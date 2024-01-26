@@ -1,7 +1,11 @@
 [package]
 name = "docker2rootfs"
+description = "A tool to convert a docker image to a rootfs."
 version = "0.1.0"
+repository = "https://github.com/chantra/bpfcitools/tree/main/docker2rootfs"
+readme = "README.md"
 edition = "2021"
+license = "BSD-2"
 
 [dependencies]
 anyhow = "1"

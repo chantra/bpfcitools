@@ -63,8 +63,11 @@ where
         // Unpack layers
         let gz_dec = gzip::Decoder::new(l.as_slice())?;
         let mut archive = tar::Archive::new(gz_dec);
-        archive.set_preserve_permissions(true);
-        archive.set_unpack_xattrs(true);
+        if users::get_effective_uid() == 0 {
+            archive.set_preserve_ownerships(true);
+            archive.set_preserve_permissions(true);
+            archive.set_unpack_xattrs(true);
+        }
         unpacker(archive, target_dir)?;
 
         // Clean whiteouts

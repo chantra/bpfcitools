@@ -3,8 +3,9 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use dkregistry::render;
 use futures::future::try_join_all;
+
+mod render;
 
 #[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]

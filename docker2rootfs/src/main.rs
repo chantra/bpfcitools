@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use clap::Parser;
 use futures::future::try_join_all;
-use tracing::info;
+use tracing::{debug, info};
 
 mod render;
 
@@ -23,9 +23,36 @@ struct Args {
     #[arg(short, long, default_value = "latest")]
     reference: String,
 
+    /// Caching directory
+    #[arg(short, long)]
+    cache: Option<PathBuf>,
+
     /// Output directory
     #[arg(short, long)]
     output: PathBuf,
+}
+
+async fn download_layer(
+    client: &dkregistry::v2::Client,
+    image: &str,
+    layer_digest: &str,
+    cache_dir: Option<&PathBuf>,
+) -> Result<Vec<u8>> {
+    if cache_dir.is_some() {
+        let cache_path = cache_dir.unwrap().join(layer_digest);
+        if cache_path.exists() {
+            debug!("Using cached layer {}", layer_digest);
+            return fs::read(cache_path)
+                .context(format!("Failed to read cached layer {}", layer_digest));
+        }
+    }
+    let blob = client.get_blob(image, layer_digest).await?;
+    if cache_dir.is_some() {
+        let cache_path = cache_dir.unwrap().join(layer_digest);
+        debug!("Caching layer {}", layer_digest);
+        fs::write(cache_path, &blob).context(format!("Failed to cache layer {}", layer_digest))?;
+    }
+    Ok(blob)
 }
 
 #[tokio::main]
@@ -64,7 +91,9 @@ async fn main() -> Result<()> {
 
     let blob_futures = layers_digests
         .iter()
-        .map(|layer_digest| dclient.get_blob(&args.image, layer_digest))
+        .map(|layer_digest| {
+            download_layer(&dclient, &args.image, layer_digest, args.cache.as_ref())
+        })
         .collect::<Vec<_>>();
     let blobs = try_join_all(blob_futures).await?;
 

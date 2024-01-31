@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use clap::Parser;
 use futures::future::try_join_all;
+use tracing::info;
 
 mod render;
 
@@ -29,6 +30,8 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    env_logger::init();
+
     let args = Args::parse();
 
     // Create the directory if it does not exist.
@@ -57,7 +60,7 @@ async fn main() -> Result<()> {
     let manifest = dclient.get_manifest(&args.image, &args.reference).await?;
     let layers_digests = manifest.layers_digests(None)?;
 
-    println!("Downloading {} layer(s)", layers_digests.len());
+    info!("Downloading {} layer(s)", layers_digests.len());
 
     let blob_futures = layers_digests
         .iter()
@@ -65,9 +68,9 @@ async fn main() -> Result<()> {
         .collect::<Vec<_>>();
     let blobs = try_join_all(blob_futures).await?;
 
-    println!("Downloaded {} layer(s)", blobs.len());
+    info!("Downloaded {} layer(s)", blobs.len());
 
-    println!("Unpacking layers to {}", args.output.display());
+    info!("Unpacking layers to {}", args.output.display());
 
     let canonical_path = args.output.canonicalize().unwrap();
     render::unpack(&blobs, &canonical_path)?;

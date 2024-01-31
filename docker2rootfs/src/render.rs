@@ -6,6 +6,7 @@
 
 use libflate::gzip;
 use std::{fs, io, path};
+use tracing::debug;
 
 #[derive(Debug, thiserror::Error)]
 pub enum RenderError {
@@ -59,7 +60,9 @@ where
     if !target_dir.is_absolute() || !target_dir.exists() || !target_dir.is_dir() {
         return Err(RenderError::WrongTargetPath(target_dir.to_path_buf()));
     }
-    for l in layers {
+    for (i, l) in layers.iter().enumerate() {
+        debug!("unpacking layer {}", i);
+
         // Unpack layers
         let gz_dec = gzip::Decoder::new(l.as_slice())?;
         let mut archive = tar::Archive::new(gz_dec);
@@ -76,6 +79,7 @@ where
         for entry in archive.entries()? {
             let file = entry?;
             let path = file.path()?;
+            debug!("Unpacking file {:?}", path);
             let parent = path.parent().unwrap_or_else(|| path::Path::new("/"));
             if let Some(fname) = path.file_name() {
                 let wh_name = fname.to_string_lossy();

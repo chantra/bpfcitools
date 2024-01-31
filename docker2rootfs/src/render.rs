@@ -31,6 +31,7 @@ pub fn unpack(layers: &[Vec<u8>], target_dir: &path::Path) -> Result<(), RenderE
 ///
 /// Layers must be provided as gzip-compressed tar archives, with lower layers
 /// coming first. Target directory must be an existing absolute path.
+#[allow(dead_code)]
 pub fn filter_unpack<P>(
     layers: &[Vec<u8>],
     target_dir: &path::Path,

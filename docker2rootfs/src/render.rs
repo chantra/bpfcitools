@@ -105,6 +105,10 @@ where
 // error is non-fatal.  Otherwise still return error for other
 // failures.
 fn remove_whiteout(path: path::PathBuf) -> io::Result<()> {
+    if path.is_file() {
+        return fs::remove_file(path);
+    }
+
     let res = fs::remove_dir_all(path);
 
     match res {

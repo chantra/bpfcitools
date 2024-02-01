@@ -19,7 +19,7 @@ The steps below are assuming a modern Ubuntu distro. Adapt this to your preferre
 apt install -y qemu-system-{x86,arm,s390x} qemu-user-static 
 ```
 
-While technically this should be enough to spin up our VM.... we are going to use a few more tools to help us set up and run our environment. Follow their relative "install" procedures:
+While technically this should be enough to spin up our VM.... We are going to use a few more tools to help us set up and run our environment. Follow their relative "install" procedures:
 
 * [GH CLI](https://cli.github.com/), this is used to be able to download the build artifacts (e.g kernel and selftests)
 * [danobi/vmtest](https://github.com/danobi/vmtest), used to run the tests against the kernel that was built
@@ -136,10 +136,43 @@ Setting up strace (5.5-3ubuntu1) ...
 
 `strace` will then be available in the guest rootfs. And because we mount the rootfs in the guest, you can install packages in the chroot and they will be made available in the guest immediately.
 
-## Tips & Tricks
+## Tips, Tricks, Notes, Caveats
+
+
+### Streaming output to stdout
 
 By default `vmtest` will print the output in a small viewport it is detects a tty, and will dump all text when done. If you want to see the text scrolling, pipe `vmtest` into `cat`, e.g:
 
 ```
 vmtest -k kbuild-output/arch/s390/boot/bzImage -r main-s390x -a s390x "cd /mnt/vmtest/selftests/bpf && ./test_progs -t assign_reuse" | cat
 ```
+
+### Setting VM environment for tests
+
+We have a lot of different tests that run and some of them assume the VM to be set in a specific way.
+
+If you are going to run all tests, you likely need to make sure those commands are run:
+```
+/bin/mount bpffs /sys/fs/bpf -t bpf && \
+  ip link set lo up
+```
+
+So, if you wanted to run all tests from `test_progs` in a one-liner:
+```
+vmtest -k kbuild-output/arch/s390/boot/bzImage -r main-s390x -a s390x "/bin/mount bpffs /sys/fs/bpf -t bpf && \
+  ip link set lo up && \
+  cd /mnt/vmtest/selftests/bpf && \
+  ./test_progs -l"
+```
+
+### Ctrl-C/Ctrl-Z are not propagated to the VM in interactive mode
+
+Yes... this is a current limitation of vmtest interactive mode. There is likely a solution to this but it needs to be implemented. For now we need to work around it.
+
+### Why not using ${OTHER_QEMU_WRAPPER}
+
+There is plenty of them and likely people have their own preferences. `vmtest` was appealing because:
+- it is simple and straightforward to use as a one liner
+- was solving some of the problems we had with the previous [rootfs approach from BPF CI](https://github.com/libbpf/ci/pull/117)
+- runs the same stack then BPF CI
+- can be used for local development

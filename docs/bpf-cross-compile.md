@@ -14,7 +14,7 @@ EOF
 # Add the architecture
 sudo dpkg --add-architecture s390x
 
-apt install g{cc,++}-"${XARCH}-linux-gnu" {libelf-dev,libssl-dev,pkgconf}:s390sx
+apt install g{cc,++}-"${XARCH}-linux-gnu" {libelf-dev,libssl-dev,pkgconf}:s390x
 
 KBUILD_OUTPUT_DIR="/tmp/kbuild-${XPLATFORM}"
 mkdir "${KBUILD_OUTPUT_DIR}"

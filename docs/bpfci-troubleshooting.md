@@ -23,7 +23,7 @@ While technically this should be enough to spin up our VM.... We are going to us
 
 * [GH CLI](https://cli.github.com/), this is used to be able to download the build artifacts (e.g kernel and selftests)
 * [danobi/vmtest](https://github.com/danobi/vmtest), used to run the tests against the kernel that was built
-* [docker2rootfs](../docker2rootfs/), used to download and extract a rootfs from the CI runners' docker images.
+* [docker2rootfs](https://github.com/chantra/bpfcitools/tree/main/docker2rootfs), used to download and extract a rootfs from the CI runners' docker images.
 
 
 

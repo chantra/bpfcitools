@@ -84,14 +84,12 @@ async fn get_manifest(
                     return Ok(manifest);
                 }
             }
-            return Err(anyhow::anyhow!(
+            Err(anyhow::anyhow!(
                 "No manifest found for architecture {}",
                 args.architecture.as_ref().unwrap()
-            ));
+            ))
         }
-        _ => {
-            return Ok(manifest);
-        }
+        _ => Ok(manifest),
     }
 }
 
@@ -126,13 +124,12 @@ async fn main() -> Result<()> {
 
     let login_scope = format!("repository:{}:pull", args.image);
     let dclient = client.authenticate(&[&login_scope]).await?;
-    let manifest = get_manifest(&dclient, &args).await.expect(
-        format!(
+    let manifest = get_manifest(&dclient, &args).await.unwrap_or_else(|_| {
+        panic!(
             "Did not find a manifest for {}:{}",
             args.image, args.reference
         )
-        .as_str(),
-    );
+    });
 
     trace!("Manifest: {:?}", manifest);
     let layers_digests = manifest.layers_digests(None)?;

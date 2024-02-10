@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use clap::Parser;
 use futures::future::try_join_all;
-use tracing::{debug, info};
+use tracing::{debug, info, trace};
 
 mod render;
 
@@ -26,6 +26,13 @@ struct Args {
     /// Caching directory
     #[arg(short, long)]
     cache: Option<PathBuf>,
+
+    /// The architecture of the image to download. Some images are built
+    /// for multiple architectures. When this happens, this option *must* be
+    /// provided to know what image to download.
+    /// The variants are listed in https://github.com/opencontainers/image-spec/blob/main/image-index.md#platform-variants
+    #[arg(short, long)]
+    architecture: Option<String>,
 
     /// Output directory
     #[arg(short, long)]
@@ -53,6 +60,39 @@ async fn download_layer(
         fs::write(cache_path, &blob).context(format!("Failed to cache layer {}", layer_digest))?;
     }
     Ok(blob)
+}
+
+/// Returns the manifest for any image:reference.
+/// If the image is an OCI image index, returns the underlying image matching the requested architecture.
+/// Otherwise, return the Image manifest originally returned by the API.
+/// Errors if this is an OCI image list and no architecture flag was passed, or if no image manifest matches the architecture.
+async fn get_manifest(
+    client: &dkregistry::v2::Client,
+    args: &Args,
+) -> Result<dkregistry::v2::manifest::Manifest> {
+    let mut manifest = client.get_manifest(&args.image, &args.reference).await?;
+    match manifest {
+        dkregistry::v2::manifest::Manifest::ML(ml) => {
+            debug!("Got an Image List, finding matching platform.");
+            trace!("Image List: {:?}", ml);
+            if args.architecture.is_none() {
+                return Err(anyhow::anyhow!("This image is availale for multiple architectures, you need to specify which one you want with --architecture flag."));
+            }
+            for item in ml.manifests {
+                if Some(item.architecture()) == args.architecture {
+                    manifest = client.get_manifest(&args.image, &item.digest).await?;
+                    return Ok(manifest);
+                }
+            }
+            return Err(anyhow::anyhow!(
+                "No manifest found for architecture {}",
+                args.architecture.as_ref().unwrap()
+            ));
+        }
+        _ => {
+            return Ok(manifest);
+        }
+    }
 }
 
 #[tokio::main]
@@ -86,9 +126,18 @@ async fn main() -> Result<()> {
 
     let login_scope = format!("repository:{}:pull", args.image);
     let dclient = client.authenticate(&[&login_scope]).await?;
-    let manifest = dclient.get_manifest(&args.image, &args.reference).await?;
+    let manifest = get_manifest(&dclient, &args).await.expect(
+        format!(
+            "Did not find a manifest for {}:{}",
+            args.image, args.reference
+        )
+        .as_str(),
+    );
+
+    trace!("Manifest: {:?}", manifest);
     let layers_digests = manifest.layers_digests(None)?;
 
+    trace!("Layers digests: {:?}", layers_digests);
     info!("Downloading {} layer(s)", layers_digests.len());
 
     let blob_futures = layers_digests

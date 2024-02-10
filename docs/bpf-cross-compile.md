@@ -32,17 +32,10 @@ make  ARCH="${XARCH}" CROSS_COMPILE="${XPLATFORM}-linux-gnu-" O="${KBUILD_OUTPUT
 
 ## Generate Ubuntu 23.10 rootfs
 
-In order to run the kernel in a VM we need a rootfs for s390x of the same Ubuntu version  to avoid library mismatch.
-
-The library used by `docker2rootfs` is failing with docker registry. For now one will need to use docker to extract a s390x Ubuntu 23.10 rootfs (or use debootstrap):
+In order to run the kernel in a VM we need a rootfs for s390x of the same Ubuntu version to avoid library mismatch.
 
 ```
-docker pull docker.io/s390x/ubuntu:23.10
-# Generate a container from the image
-docker run s390x/ubuntu:23.10
-# export the container to /tmp/s390x_rootfs
-mkdir /tmp/s390x_rootfs
-docker export $(docker container ls --all --quiet --filter "ancestor=s390x/ubuntu:23.10")  | tar -C /tmp/s390x_rootfs -xvf -
+docker2rootfs -R registry-1.docker.io -i s390x/ubuntu -r 23.10 -o /tmp/s390x_rootfs
 # chroot and install a few useful packages
 cp /etc/resolv.conf /tmp/s390x_rootfs/etc/
 sudo chroot  /tmp/s390x_rootfs/

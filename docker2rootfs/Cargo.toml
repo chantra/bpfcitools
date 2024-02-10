@@ -10,7 +10,8 @@ license = "BSD-2"
 [dependencies]
 anyhow = "1"
 clap = { version = "4.4.18", features = ["derive", "string"] }
-dkregistry = { version = "0.5.1-alpha.0", git = "https://github.com/camallo/dkregistry-rs.git", rev = "6c4ac7700f8870e58aaa5a906a28e65cdf254d58" }
+dkregistry = { version = "0.5.1-alpha.0", git = "https://github.com/chantra/camallo-dkregistry-rs.git", branch = "wip" }
+#dkregistry = { path = '../../camallo-dkregistry-rs' }
 env_logger = "0.10"
 futures = "0.3"
 libflate = "2"

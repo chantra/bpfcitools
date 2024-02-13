@@ -44,9 +44,7 @@ The kernel takes a couple of seconds to boot up, so iterating is pretty fast reg
 
 ## Hacking example:
 
-To illustrate, let's reproduce the issue from https://lore.kernel.org/all/20240131053212.2247527-1-chantr4@gmail.com/ 
-
-by applying:
+To illustrate, let's reproduce the issue with [lwt_redirect test](https://lore.kernel.org/all/20240131053212.2247527-1-chantr4@gmail.com/) by applying:
 
 ```diff
 diff --git a/tools/testing/selftests/bpf/prog_tests/lwt_redirect.c b/tools/testing/selftests/bpf/prog_tests/lwt_redirect.c
@@ -133,6 +131,3 @@ close_netns:PASS:setns 0 nsec
 #142/2   lwt_redirect/lwt_redirect_normal_nomac:OK
 #142     lwt_redirect:FAIL
 ```
-
-> [!NOTE]
-> Because we only modify the tests, and not the kernel, we could technically get an interactive shell and re-run the tests from the host-share, unfortunately, qemu is not revalidating the host files when they are modified: https://lore.kernel.org/lkml/CAFkjPTmVbyuA0jEAjYhsOsg-SE99yXgehmjqUZb4_uWS_L-ZTQ@mail.gmail.com/

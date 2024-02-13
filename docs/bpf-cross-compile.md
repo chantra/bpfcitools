@@ -1,6 +1,10 @@
 
 # Cross-compiling BPF
 
+## Install depedencies
+
+This is assuming a modern Ubunt distro. What we will do here is to install the toolchain that is needed to cross-compile for the target architecture.
+
 > [!WARNING] don't go crazy in installed foreign arch packages, it may mess some of your system symlinks. Probably better off doing this in a container....
 
 ```
@@ -15,7 +19,29 @@ EOF
 sudo dpkg --add-architecture s390x
 
 apt install g{cc,++}-"${XARCH}-linux-gnu" {libelf-dev,libssl-dev,pkgconf}:s390x
+```
 
+## Patch kernel sources
+
+We need to apply https://gist.github.com/chantra/ad464fdb9026ebe88ea3b92cd2edb91e to the kernel tree in order to be able to 
+run `bpftool` for the target architecture during the skeleton generation.
+
+In turn, this requires support for the foreign architecture with `binfmt`. For new Ubuntu systems, it is just a matter
+of installing
+```
+sudo apt-get install -y qemu-user-static
+```
+
+Then you can see the different architecture supported by looking at:
+```
+$ ls /proc/sys/fs/binfmt_misc/
+llvm-16-runtime.binfmt  qemu-alpha  qemu-cris     qemu-loongarch64  qemu-mips      qemu-mipsel     qemu-ppc      qemu-riscv32  qemu-sh4    qemu-sparc32plus  qemu-xtensaeb
+python3.11              qemu-arm    qemu-hexagon  qemu-m68k         qemu-mips64    qemu-mipsn32    qemu-ppc64    qemu-riscv64  qemu-sh4eb  qemu-sparc64      register
+qemu-aarch64            qemu-armeb  qemu-hppa     qemu-microblaze   qemu-mips64el  qemu-mipsn32el  qemu-ppc64le  qemu-s390x    qemu-sparc  qemu-xtensa       status
+```
+
+## Building the kernel and selftests
+```
 KBUILD_OUTPUT_DIR="/tmp/kbuild-${XPLATFORM}"
 mkdir "${KBUILD_OUTPUT_DIR}"
 cat tools/testing/selftests/bpf/config{,.vm,.${XPLATFORM}} > ${KBUILD_OUTPUT_DIR}/.config

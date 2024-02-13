@@ -43,7 +43,7 @@ sudo chroot  /tmp/s390x_rootfs/
 mount -t devtmpfs -o nosuid,noexec dev /dev
 mount -t tmpfs tmpfs /tmp
 apt update
-DEBIAN_FRONTEND=noninteractive apt-get install -y qemu-guest-agent ethtool keyutils iptables gawk libelf1 zlib1g libssl3
+DEBIAN_FRONTEND=noninteractive apt-get install -y qemu-guest-agent ethtool keyutils iptables gawk libelf1 zlib1g libssl3 iproute2 finit-sysv
 umount /tmp /dev
 # exit chroot
 exit

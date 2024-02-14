@@ -23,7 +23,7 @@ apt install g{cc,++}-"${XARCH}-linux-gnu" {libelf-dev,libssl-dev,pkgconf}:s390x
 
 ## Patch kernel sources
 
-We need to apply [xcompile_bpf_selftest.diff](https://gist.github.com/chantra/ad464fdb9026ebe88ea3b92cd2edb91e) to the kernel tree in order to be able to 
+We need to apply [xcompile_bpf_selftest.diff](https://gist.github.com/chantra/72a12644074444e4edffe2cfd0e3138e) to the kernel tree in order to be able to 
 run `bpftool` for the target architecture during the skeleton generation.
 
 In turn, this requires support for the foreign architecture with `binfmt`. For new Ubuntu systems, it is just a matter
